@@ -1,6 +1,7 @@
 /**
  * Implemntationm of the Beejum algorithm
  *
+ * Compile with: cc -O0 main.c -o main -lcrypto
  */
 
 #include <stdio.h>
@@ -9,9 +10,8 @@
 #include <openssl/sha.h>
 
 /* Write hex presentation of bin data to screen */
-void print_bin(const unsigned char *str, size_t len) {
+static void print_bin(const unsigned char *str, size_t len) {
 	int i;
-	//char strhex[len * 2 + 1];
 	char *strhex = (char *)calloc(len * 2 + 1, sizeof(char));
 
 	for(i = 0; i < len; ++i)
@@ -21,7 +21,11 @@ void print_bin(const unsigned char *str, size_t len) {
 	free(strhex);
 }
 
-const unsigned char *hash(unsigned char *str, size_t len) {
+/* Calculate key from plaintext and fragment memory so
+ * that both key and plaintext endup in different memory
+ * sectors
+ */
+static const unsigned char *hash(const unsigned char *str, size_t len) {
 	unsigned char *digest = (unsigned char *)calloc(SHA384_DIGEST_LENGTH, sizeof(char));
 
 	SHA384(str, len, digest);
@@ -30,9 +34,19 @@ const unsigned char *hash(unsigned char *str, size_t len) {
 	print_bin(digest, SHA384_DIGEST_LENGTH);
 #endif
 
+	/* Fragment memory heap */
+	void *p = malloc(len * 4);
+	void *q = malloc(len / 2);
+
+	memcpy(((char *)p) + len, digest, len);
+	memcpy(q, digest, len / 2);
+
+	free(p);
+	free(q);
 	return digest;
 }
 
+/* Encrypt block with key */
 const unsigned char *xor(const unsigned char *key, const unsigned char *str, size_t len) {
 	int i;
 	unsigned char *ctx = calloc(len, sizeof(char));
@@ -44,11 +58,42 @@ const unsigned char *xor(const unsigned char *key, const unsigned char *str, siz
 	return ctx;
 }
 
-/* Erase all memory by overriding with zero */
+/* Erase all memory by overriding the block with zero, the
+ * latter operations prevent any generic optimization the
+ * compiler might invoke at stage 2 and 3
+ */
 void nullify(void *data, size_t size) {
 	memset(data, '\0', size);
 	((char *)&data)[0] = 0x1;
 	((char *)&data)[size - 1] = 0xf0;
+}
+
+int test(char *str, size_t len) {
+	/* Derive key from secret */
+	const unsigned char *key = hash(str, len);
+
+	//TODO: find multiple of hash block size
+	if (len > SHA384_DIGEST_LENGTH) {
+		fprintf(stderr, "Overflow\n");
+		free((void *)key);
+		return 2;
+	}
+
+	/* Encrypt secret and print result */
+	const unsigned char *encrypted = xor(key, str, len);
+	print_bin(encrypted, len);
+
+	/* Remove plaintext contents */
+	nullify(str, len);
+
+	/* Decrypt secret storage for usage */
+	const unsigned char *decrypted = xor(key, encrypted, len);
+	printf("%.*s\n", len, decrypted);
+
+	free((void *)decrypted);
+	free((void *)encrypted);
+	free((void *)key);
+	return 1;
 }
 
 int main(int argc, char *argv[]) {
@@ -61,28 +106,5 @@ int main(int argc, char *argv[]) {
 	char *data = argv[1];
 	size_t datasz = strlen(argv[1]);
 
-	/* Derive key from secret */
-	const unsigned char *key = hash(data, datasz);
-
-	//TODO: find multiple of hash block size
-	if (datasz > SHA384_DIGEST_LENGTH) {
-		fprintf(stderr, "Overflow\n");
-		return 2;
-	}
-
-	/* Encrypt secret and print result */
-	const unsigned char *encrypted = xor(key, data, datasz);
-	print_bin(encrypted, datasz);
-
-	/* Remove plaintext contents */
-	nullify(data, datasz);
-
-	/* Decrypt secret storage for usage */
-	const unsigned char *decrypted = xor(key, encrypted, datasz);
-	printf("%s\n", decrypted);
-
-	free((void *)decrypted);
-	free((void *)encrypted);
-	free((void *)key);
-	return 0;
+	return test(data, datasz);
 }
