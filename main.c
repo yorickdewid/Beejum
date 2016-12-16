@@ -9,6 +9,8 @@
 #include <memory.h>
 #include <openssl/sha.h>
 
+#define BLOCKSZ		SHA384_DIGEST_LENGTH
+
 /* Write hex presentation of bin data to screen */
 static void print_bin(const unsigned char *str, size_t len) {
 	int i;
@@ -26,12 +28,12 @@ static void print_bin(const unsigned char *str, size_t len) {
  * sectors
  */
 static const unsigned char *hash(const unsigned char *str, size_t len) {
-	unsigned char *digest = (unsigned char *)calloc(SHA384_DIGEST_LENGTH, sizeof(char));
+	unsigned char *digest = (unsigned char *)calloc(BLOCKSZ, sizeof(char));
 
 	SHA384(str, len, digest);
 
 #ifdef DEBUG
-	print_bin(digest, SHA384_DIGEST_LENGTH);
+	print_bin(digest, BLOCKSZ);
 #endif
 
 	/* Fragment memory heap */
@@ -73,7 +75,7 @@ int test(char *str, size_t len) {
 	const unsigned char *key = hash(str, len);
 
 	//TODO: find multiple of hash block size
-	if (len > SHA384_DIGEST_LENGTH) {
+	if (len > BLOCKSZ) {
 		fprintf(stderr, "Overflow\n");
 		free((void *)key);
 		return 2;
