@@ -1,4 +1,7 @@
 /**
+ * Copyright (C) 2016 <ydw at x3 dot quenza dot net>
+ * All rights reserved.
+ *
  * Implemntationm of the Beejum algorithm
  *
  * Compile with: cc -O0 main.c -o main -lcrypto
@@ -16,7 +19,7 @@ static void print_bin(const unsigned char *str, size_t len) {
 	int i;
 	char *strhex = (char *)calloc(len * 2 + 1, sizeof(char));
 
-	for(i = 0; i < len; ++i)
+	for (i = 0; i < len; ++i)
 		sprintf(&strhex[i * 2], "%02x", (unsigned int)str[i]);
 
 	printf("Hexdump: %s\n", strhex);
@@ -28,23 +31,37 @@ static void print_bin(const unsigned char *str, size_t len) {
  * sectors
  */
 static const unsigned char *hash(const unsigned char *str, size_t len) {
-	unsigned char *digest = (unsigned char *)calloc(BLOCKSZ, sizeof(char));
+	int j, i = (len / BLOCKSZ) + 1;
+	unsigned char *digest = (unsigned char *)calloc(i * BLOCKSZ, sizeof(char));
 
 	SHA384(str, len, digest);
 
 #ifdef DEBUG
+	puts("hash(): chain");
 	print_bin(digest, BLOCKSZ);
 #endif
+	/* Chain the digest in a multiple of the block size */
+	for (j = 1; j < i; ++j) {
+		SHA384(digest + (BLOCKSZ * (j - 1)), BLOCKSZ, digest + (BLOCKSZ * j));
+#ifdef DEBUG
+		printf("j:%d\n", j);
+		print_bin(digest + (BLOCKSZ * j), BLOCKSZ);
+#endif
+	}
 
 	/* Fragment memory heap */
 	void *p = malloc(len * 4);
+	void *x = malloc(len * 2);
 	void *q = malloc(len / 2);
+	void *r = malloc(len);
 
 	memcpy(((char *)p) + len, digest, len);
+	memcpy(((char *)x) + 10, digest, len);
 	memcpy(q, digest, len / 2);
+	memcpy(r, digest, len);
 
-	free(p);
-	free(q);
+	free(p); free(x);
+	free(q); free(r);
 	return digest;
 }
 
@@ -60,26 +77,15 @@ const unsigned char *xor(const unsigned char *key, const unsigned char *str, siz
 	return ctx;
 }
 
-/* Erase all memory by overriding the block with zero, the
- * latter operations prevent any generic optimization the
- * compiler might invoke at stage 2 and 3
- */
+/* Erase all memory by overriding the block with zero */
 void nullify(void *data, size_t size) {
 	memset(data, '\0', size);
-	((char *)&data)[0] = 0x1;
-	((char *)&data)[size - 1] = 0xf0;
+	/* OPTIONAL: some tricks to prevent compiler optimization */
 }
 
 int test(char *str, size_t len) {
 	/* Derive key from secret */
 	const unsigned char *key = hash(str, len);
-
-	//TODO: find multiple of hash block size
-	if (len > BLOCKSZ) {
-		fprintf(stderr, "Overflow\n");
-		free((void *)key);
-		return 2;
-	}
 
 	/* Encrypt secret and print result */
 	const unsigned char *encrypted = xor(key, str, len);
