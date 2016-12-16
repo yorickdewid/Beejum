@@ -1,5 +1,11 @@
+CFLAGS=-g -O0 beejum.c -lcrypto
+
 all:
-	$(CC) -O0 main.c -o main -lcrypto
+	$(CC) $(CFLAGS) -DUTIL -o beejum
 
 clean:
-	$(RM) -rf main
+	$(RM) -rf beejum btest
+
+test:
+	$(CC) $(CFLAGS) -DTESTCASE -o btest
+	@./btest
