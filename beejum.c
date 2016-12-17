@@ -2,7 +2,8 @@
  * Copyright (C) 2016 Yorick de Wid <ydw at x3 dot quenza dot net>
  * All rights reserved.
  *
- * Implemntationm of the Beejum algorithm
+ * Implementation of the Beejum algorithm. See README for details.
+ * Be sure to run the testcases.
  *
  * Compile with: cc -O0 main.c -o main -lcrypto
  */
