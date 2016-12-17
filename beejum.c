@@ -133,6 +133,7 @@ int main(int argc, char *argv[]) {
 #define INPUT_1	"ABC123"
 #define INPUT_2	"7820daf4d110c5d2a71d17e078b5fe919159eb254d86822ffd51a1a7afa61489"
 #define INPUT_3	"1d700857f0c7d0636274c3c4b35a160c6271602ba1b7df6687e396b4b29a93b852a0eacc50d5221dc46bad5ae630f4ec0f9e28e206c920a65042503c74b"
+#define INPUT_4	"\x18\xf3\x8c\xc4\xee\xc5\x53\xd3\xc7\x06\x66\xf8"
 
 void test_1(void) {
 	puts("[Test 1]");
@@ -200,6 +201,24 @@ void test_3(void) {
 	free((void *)key);
 }
 
+void test_4(void) {
+	puts("[Test 4]");
+
+	size_t dsz = strlen(INPUT_4);
+
+	/* Derive key from secret */
+	unsigned char *key = hash(INPUT_4, dsz);
+	unsigned char *encrypted = xor(key, INPUT_4, dsz);
+
+	/* Decrypt secret storage for usage */
+	unsigned char *decrypted = xor(key, encrypted, dsz);
+	assert(!strncmp(decrypted, INPUT_4, dsz));
+
+	free((void *)decrypted);
+	free((void *)encrypted);
+	free((void *)key);
+}
+
 int main(void) {
 	puts("Running testcases:");
 
@@ -207,6 +226,7 @@ int main(void) {
 	test_1();
 	test_2();
 	test_3();
+	test_4();
 
 	puts("Tests PASSED");
 	return 0;
