@@ -5,7 +5,7 @@
  * Implementation of the Beejum algorithm. See README for details.
  * Be sure to run the testcases.
  *
- * Compile with: cc -O0 main.c -o main -lcrypto
+ * Compile with: cc -O0 -DUTIL source.c -o util -lcrypto
  */
 
 #include <stdio.h>
