@@ -69,7 +69,7 @@ static unsigned char *hash(const unsigned char *str, size_t len) {
 /* Encrypt block with key */
 unsigned char *xor(const unsigned char *key, const unsigned char *str, size_t len) {
 	int i;
-	unsigned char *ctx = calloc(len, sizeof(char));
+	unsigned char *ctx = (unsigned char *)calloc(len, sizeof(char));
 
 	/* XOR block */
 	for(i = 0; i < len; ++i)
@@ -88,10 +88,10 @@ void nullify(void *data, size_t size) {
 
 int util(char *str, size_t len) {
 	/* Derive key from secret */
-	unsigned char *key = hash(str, len);
+	unsigned char *key = hash((unsigned char *)str, len);
 
 	/* Encrypt secret and print result */
-	unsigned char *encrypted = xor(key, str, len);
+	unsigned char *encrypted = xor(key, (unsigned char *)str, len);
 	print_bin(encrypted, len);
 
 	/* Remove plaintext contents */
@@ -99,7 +99,7 @@ int util(char *str, size_t len) {
 
 	/* Decrypt secret storage for usage */
 	unsigned char *decrypted = xor(key, encrypted, len);
-	printf("%.*s\n", len, decrypted);
+	printf("%.*s\n", (int)len, decrypted);
 
 	/* Remove any contents, the key is wiped for the most part */
 	nullify(encrypted, len);
@@ -142,14 +142,14 @@ void test_1(void) {
 	size_t dsz = strlen(INPUT_1);
 
 	/* Derive key from secret */
-	unsigned char *key = hash(INPUT_1, dsz);
-	unsigned char *encrypted = xor(key, INPUT_1, dsz);
-	assert(strncmp(encrypted, INPUT_1, dsz));
+	unsigned char *key = hash((unsigned char *)INPUT_1, dsz);
+	unsigned char *encrypted = xor(key, (unsigned char *)INPUT_1, dsz);
+	assert(strncmp((char *)encrypted, INPUT_1, dsz));
 
 	/* Decrypt secret storage for usage */
 	unsigned char *decrypted = xor(key, encrypted, dsz);
-	assert(strncmp(decrypted, encrypted, dsz));
-	assert(!strncmp(decrypted, INPUT_1, dsz));
+	assert(strncmp((char *)decrypted, (char *)encrypted, dsz));
+	assert(!strncmp((char *)decrypted, INPUT_1, dsz));
 
 	/* Remove any contents, the key is wiped for the most part */
 	nullify(encrypted, dsz);
@@ -172,12 +172,12 @@ void test_2(void) {
 	size_t dsz = strlen(INPUT_2);
 
 	/* Derive key from secret */
-	unsigned char *key = hash(INPUT_2, dsz);
-	unsigned char *encrypted = xor(key, INPUT_2, dsz);
+	unsigned char *key = hash((unsigned char *)INPUT_2, dsz);
+	unsigned char *encrypted = xor(key, (unsigned char *)INPUT_2, dsz);
 
 	/* Decrypt secret storage for usage */
 	unsigned char *decrypted = xor(key, encrypted, dsz);
-	assert(!strncmp(decrypted, INPUT_2, dsz));
+	assert(!strncmp((char *)decrypted, INPUT_2, dsz));
 
 	free((void *)decrypted);
 	free((void *)encrypted);
@@ -190,12 +190,12 @@ void test_3(void) {
 	size_t dsz = strlen(INPUT_3);
 
 	/* Derive key from secret */
-	unsigned char *key = hash(INPUT_3, dsz);
-	unsigned char *encrypted = xor(key, INPUT_3, dsz);
+	unsigned char *key = hash((unsigned char *)INPUT_3, dsz);
+	unsigned char *encrypted = xor(key, (unsigned char *)INPUT_3, dsz);
 
 	/* Decrypt secret storage for usage */
 	unsigned char *decrypted = xor(key, encrypted, dsz);
-	assert(!strncmp(decrypted, INPUT_3, dsz));
+	assert(!strncmp((char *)decrypted, INPUT_3, dsz));
 
 	free((void *)decrypted);
 	free((void *)encrypted);
@@ -208,12 +208,12 @@ void test_4(void) {
 	size_t dsz = strlen(INPUT_4);
 
 	/* Derive key from secret */
-	unsigned char *key = hash(INPUT_4, dsz);
-	unsigned char *encrypted = xor(key, INPUT_4, dsz);
+	unsigned char *key = hash((unsigned char *)INPUT_4, dsz);
+	unsigned char *encrypted = xor(key, (unsigned char *)INPUT_4, dsz);
 
 	/* Decrypt secret storage for usage */
 	unsigned char *decrypted = xor(key, encrypted, dsz);
-	assert(!strncmp(decrypted, INPUT_4, dsz));
+	assert(!strncmp((char *)decrypted, INPUT_4, dsz));
 
 	free((void *)decrypted);
 	free((void *)encrypted);
