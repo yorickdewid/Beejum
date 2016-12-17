@@ -1,0 +1,28 @@
+The Beejum algorihtm prevents from stress attacks on  memory resistors
+and physical memory blocks  caused  by write commits  to  main memory.
+Influenced memory cells  can  leak  sensitive  information  even after
+the allocated objects are overwritten  by the  application. These type
+of attacks are difficult to prevent  and require architecture specific
+mearures to succesfully prevent. Until there  is an  generic  solution
+the chance of a successful attack on sensitive memory can be miminized
+using a single encryption routine.
+The Beejum algorithm seperates the memory parts  containing the secret
+data to reduce the success of  differential analysis.Hashing the input
+data results in  a secret  key  which is used to encrypt the sensitive
+data.  The  encryption  is a  basic XOR operation  which  can hold the
+ciphertext in a single memory location. This location depends on other
+memory  parts  to be succesfully  attacked.  In practice  a  powerfull
+adversary will have limited control over  physicall  memory  even with
+an weak operating  system  underneath. Before the  information  can be
+used, the single memory location must decrypt the data, using the same
+XOR cipher.  In  order to strengthen the implementation it is vital to
+disable  any  compiler  optimizations,  and  to  induce as much memory
+fragmentation  as posible  to lower the risk of adjacent memory block.
+This proof of concept can deal with arbitrary input lengths and chains
+blocks of  hashes to get a multiple  of the hash  block  size.  From a
+security perspective it is irrelevant how the  hash  is implemented as
+long as it acts like a cryptographic secure hash algorithm.  This  PoC
+is vulnerable  to a  partial hash  collision attack,  length extension
+attack and  chosen  plaintext attack,  although  the  use case here is
+different. Also keys  are not entirely  wiped  from memory  due to the
+length of the input data.
