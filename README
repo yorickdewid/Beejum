@@ -1,3 +1,6 @@
+Copyright (c) 2016 - Yorick de Wid <ydw at x3 dot quenza dot net>
+All rights reserved.
+
 The Beejum algorithm prevents stress attacks on  memory resistors  and
 physical  memory  blocks, caused  by  write  commits  to  main memory.
 Influenced memory cells  can  leak  sensitive  information  even after
@@ -17,7 +20,7 @@ a weak operating  system  underneath. Before  the  information  can be
 used, the single memory location  must decrypt the data using the same
 XOR cipher.  In  order to strengthen the implementation it is vital to
 disable  any   compiler   optimizations   to  induce  as  much  memory
-fragmentation  as posible, to lower the risk of adjacent memory block.
+fragmentation as possible, to lower the risk of adjacent memory block.
 This proof of concept can deal with  arbitrary input lengths and chain
 blocks of  hashes in order to get a multiple of  the hash  block size.
 From a  security  perspective  it  is  irrelevant  how  the  hash   is
